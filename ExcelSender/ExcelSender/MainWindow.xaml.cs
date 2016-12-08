@@ -6,6 +6,7 @@ using System.IO;
 using System.Reflection;
 using Newtonsoft.Json;
 using System.Net;
+using System.Diagnostics;
 
 namespace ExcelSender
 {
@@ -33,11 +34,6 @@ namespace ExcelSender
                 string URL = @"http://iotdtg.w7.n3n.io";
                 string path = @"/iotdtg/death";
                 int port = 9998;
-
-                var httpWebRequest = (HttpWebRequest)WebRequest.Create(URL+":"+port.ToString()+path);
-                httpWebRequest.ContentType = "application/json";
-                
-                httpWebRequest.Method = "POST";
 
                 var spreadsheetLocation = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "Raw Data.xlsx");
 
@@ -70,11 +66,15 @@ namespace ExcelSender
                     //Console.Write("\t");
                     //Console.WriteLine();
 
-                    //for (int i = 2; i <= values.GetLength(0); i++)
-                    for (int i = 2; i <= 2; i++)
+                    for (int i = 2; i <= values.GetLength(0); i++)
+                    //for (int i = 2; i <= 2; i++)
                     {
                         var d = new ExcelData(values[i, 1], values[i, 2], values[i, 3], values[i, 4], values[i, 5], values[i, 6],
                                         values[i, 7], values[i, 8], values[i, 9], values[i, 10], values[i, 11], values[i, 12], values[i, 13]);
+
+                        var httpWebRequest = (HttpWebRequest)WebRequest.Create(URL + ":" + port.ToString() + path);
+                        httpWebRequest.ContentType = "application/json";
+                        httpWebRequest.Method = "POST";
 
                         using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
                         {
@@ -82,16 +82,19 @@ namespace ExcelSender
 
                             streamWriter.Write(jsonString);
                             streamWriter.Flush();
-                            streamWriter.Close();
+                            streamWriter.Close();                            
                         }
 
                         var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
                         using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
                         {
                             var result = streamReader.ReadToEnd();
-                            MessageBox.Show(result);
+                            Debug.WriteLine(String.Format("Sent line No.{0}, Result is {1}", i, result));
+                            //MessageBox.Show(result);
                         }
                     }
+
+                    MessageBox.Show("Sent total data");
                 }
             }
             catch (Exception ex)
